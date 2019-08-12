@@ -1,0 +1,6 @@
+if [ $TERM != 'dumb' ] 
+then
+    alias ls='ls --color=auto'
+fi
+
+alias ec='emacsclient'

@@ -1,0 +1,758 @@
+;; -*- emacs-lisp -*-
+;;
+;;
+;; Author: Anoop Johnson <anoop_johnson@yahoo.com>
+;;
+
+;;
+;; Preliminary checks
+;;
+
+;; Determine if I'm running Emacs 21 or 20.
+(defvar anoop-v21 (eq emacs-major-version 21))
+
+;; Determine if I'm running XEmacs.
+(defvar anoop-xemacs 
+  (string-match "XEmacs\\|Lucid" emacs-version))
+
+;; Am I running Windows?
+(defvar anoop-windows (eq system-type 'windows-nt))
+
+;;
+;; General options
+;;
+
+;; Turn off tool bar and menu bar.
+(if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+(if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+
+(display-time)				; Display the time on modeline
+(line-number-mode t)                    ; Display the line number on modeline
+(column-number-mode t)			; Display the column number on modeline
+(setq-default kill-whole-line t)	; Ctrl-k kills whole line if at col 0
+(setq-default fill-column 75)		; Wrap at col 75
+(setq-default tab-width 4)		; Show tabs as 4 cols
+(setq-default transient-mark-mode t)    ; Turn on transient mark mode
+(setq inhibit-startup-message t)        ; I'm sick of the welcome message
+(setq minibuffer-max-depth nil)
+(setq load-path (cons (expand-file-name "~/elisp") load-path))
+(setq visible-bell t) ; Turn off the irritating beep. 
+
+;(setq debug-on-error t)                ; Or --debug-init
+
+;;
+;; Emacs normally uses both tabs and spaces to indent lines. If you
+;; prefer, all indentation can be made from spaces only. To request this,
+;; set `indent-tabs-mode' to `nil'. This is a per-buffer variable;
+;; altering the variable affects only the current buffer, but it can be
+;; disabled for all buffers.
+
+;;
+;; Use (setq ...) to set value locally to a buffer
+;; Use (setq-default ...) to set value globally
+;;
+(setq-default indent-tabs-mode nil)
+
+;; Text mode the default mode for new buffers.
+(setq default-major-mode 'text-mode)
+
+;; Save all my backup files in a specific directory
+(defun make-backup-file-name (file)
+ (concat "~/tmp/backups/" (file-name-nondirectory file)))
+
+;; Load abbreviations table. Emacs chooses, by default, the filename
+;; "~/.abbrev_defs", so don't try to be too clever by changing its name.
+(setq-default abbrev-mode t)
+(read-abbrev-file "~/.abbrev_defs")
+(setq save-abbrevs t)
+
+;; Start gnuserv
+;(autoload 'gnuserv-start "gnuserv" "Better Emacs server support")
+;(setq gnuserv-frame (current-frame)) ; Uncomment if you want the same frame
+;(gnuserv-start)
+(server-start)
+
+;; Remote file editing.
+(require 'tramp)
+(setq tramp-default-method "scp")
+
+(require 'lusty-explorer)
+(global-set-key "\C-x\C-f" 'lusty-file-explorer)
+(global-set-key "\C-x\C-b" 'lusty-buffer-explorer)
+
+;; Load customizations
+(setq custom-file "~/elisp/anoop-custom.el")
+(load-file custom-file)
+
+(require 'linum)
+
+(unless (equal window-system nil)
+      (global-linum-mode))
+;;
+;; Useful key bindings
+;;
+ 
+;; Prefer backward-kill-word over backspace
+(global-set-key "\C-w" 'backward-kill-word)
+;; Ctrl-w was already bound to kill-region, so re-bind something else to
+;; kill-region.
+(global-set-key "\C-x\C-k" 'kill-region)
+(global-set-key "\C-c\C-k" 'kill-region)
+(global-set-key "\C-x\C-m" 'execute-extended-command)
+(global-set-key "\C-c\C-m" 'execute-extended-command)
+
+(global-set-key [(meta g)] 'goto-line)
+(global-set-key [(control c) ?b] 'browse-url)
+(global-set-key [(control o)] 'shell)
+(global-set-key [(meta n)] 'gnus)
+(global-set-key [(shift insert)] 'x-insert-selection)
+(global-set-key [(f7)] 'undo) 
+(global-set-key [(shift f7)] 'redo) 
+(global-set-key [f5] 'anoop-compile)
+(global-set-key [f6] 'anoop-compile-clean)
+;(global-set-key [f7] 'anoop-compile-install)
+(global-set-key [f8] 'anoop-compile-install-lib)
+(global-set-key [(control x) ?k] 'anoop-kill-buffer)
+(global-set-key [(control x) ?p] 'anoop-print-date)
+;(global-set-key "\M-{" 'insert-braces)
+
+
+;; For GNU Emacs
+;; (unless (featurep 'xemacs)
+;;  (set-background-color "Black")
+;;  (set-foreground-color "White")
+;;  (set-cursor-color "Orchid"))
+
+;; Reduce emissions to user from the monitor by switching to reverse video:
+;; (Eyes get tired after many more hours in reverse video mode -- citation?)
+
+;(set-foreground-color "white")
+;; if you want to use xemacs, you'll have to wrap:
+;;   (cond  ((not (string-match "XEmacs" emacs-version))
+;(set-background-color "black")
+;; Set cursor and mouse colours:
+;(set-cursor-color "yellow")
+;(set-mouse-color "white")
+;; Default font is much too thin (and thus eye-tiring). Choose a heavier type:
+;(set-default-font "9x15bold")
+
+;; New frames (using C-x 5 2) should also use the settings above:
+
+
+;; Frame specs
+;; This is GNU Emacs specific, XEmacs defaults seem to be okay.
+;(unless (featurep 'xemacs)
+;  (setq default-frame-alist '((width . 80) (height . 33) 
+;			      (background-color  . "Black") 
+;			      (foreground-color . "White") 
+;			      (cursor-color . "Orchid"))))
+
+;; If images are supported than display them when visiting them.
+(if (fboundp 'auto-image-file-mode)
+    (auto-image-file-mode 1))
+
+(setq focus-follows-mouse t)
+
+;; Font lock everything
+(setq font-lock-maximum-size nil)
+
+;; Function to set up my default color combination.
+(defun anoop-set-colors ()
+  "Set my favorite color combination." 
+  (interactive)
+  (set-background-color "Black")
+  (set-foreground-color "White")
+  (set-cursor-color "Orchid"))
+
+;;
+;; Needed packages
+;; 
+
+;; (require 'org-install)
+;; (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+;; (define-key global-map "\C-cl" 'org-store-link)
+;; (define-key global-map "\C-ca" 'org-agenda)
+;; (setq org-log-done t)
+
+(require 'jka-compr)
+(auto-compression-mode 1)
+
+;; Handy little redo function.
+(require 'redo)
+(global-set-key [(control x)(control r)] 'redo)
+
+;; Set point to the position of the last change.
+(require 'goto-last-change)
+;; Bind a key to `M-x goto-last-change'.
+(global-set-key "\C-x\C-\\" 'goto-last-change)
+
+(require 'info)
+(require 'diction)
+;(require 'tex-site)
+;(unless (featurep 'xemacs)
+; (require 'html-helper-mode))
+;(require 'psgml)
+;(require 'w3)
+;; Load my lynx viewing mode
+;(unless (featurep 'xemacs)
+;  (require 'lynx)
+;  (require 'mutt))
+(require 'htmlize)
+;(require 'dired-single)
+
+(setq load-path (cons (expand-file-name "~/elisp/docbookide") load-path))
+;(require 'docbookide)
+
+(require 'epa-file)
+(epa-file-enable)
+
+;; Webjump
+(require 'webjump)
+(global-set-key "\C-cj" 'webjump)
+(setq webjump-sites
+      (append '(
+		("Anoop Home" . "symonds.net/~anoop/")
+		("Linux India"   . "www.linux-india.org/")
+		("Google"   . "google.com/")
+		("Localhost"   . "localhost/")
+		)
+	      webjump-sample-sites))
+
+;; Emacs desktop
+(require 'desktop)
+(desktop-load-default)
+(setq desktop-globals-to-save (append '(minibuffer-history command-history file-name-history extended-command-history)
+				      desktop-globals-to-save))
+(desktop-read)
+
+(require 'saveplace)
+(setq-default save-place t)
+
+;;
+;; File associations
+;;
+
+;; Make Text mode the default mode for new buffers.
+(setq default-major-mode 'text-mode)
+(setq auto-mode-alist (cons '("README" . text-mode) auto-mode-alist))
+(setq auto-mode-alist (cons '("\\.txt$" . text-mode) auto-mode-alist))
+(setq auto-mode-alist (cons '("TODO" . outline-mode) auto-mode-alist))
+(setq auto-mode-alist (cons '("mutt" . mail-mode) auto-mode-alist))
+(setq auto-mode-alist (cons '("mbox" . mail-mode) auto-mode-alist))
+(setq auto-mode-alist (cons '("\\.eml$" . mail-mode) auto-mode-alist))
+(setq auto-mode-alist (cons '("\\.html$" . html-mode) auto-mode-alist))
+(setq auto-mode-alist (cons '("\\.htm$" . html-mode) auto-mode-alist))
+(setq auto-mode-alist (cons '("\\.glade$" . sgml-mode) auto-mode-alist))
+(setq auto-mode-alist (cons '("\\.py$" . python-mode) auto-mode-alist))
+
+(setq sgml-basic-offset 4)
+(add-to-list 'auto-mode-alist '("\\.[Cc][Ss][Vv]\\'" . csv-mode))
+(autoload 'csv-mode "csv-mode"
+  "Major mode for editing comma-separated value files." t)
+
+;;
+;; Mail related stuff.
+;;
+(setq  user-full-name "Anoop Johnson"
+       user-mail-address "anoop_johnson@yahoo.com"
+       mail-archive-file-name "~/Mail/outbox"
+       mail-user-agent (quote gnus-user-agent)
+       read-mail-command (quote gnus))
+
+(setq mail-yank-prefix ">")
+
+;; RMAIL stuff.
+(require 'rmail)
+(setq rmail-file-name "~/Mail/RMAIL")
+
+;; Call fetchmail
+(defun fetchmail ()
+  "Check new mail, popup exit message."
+  (interactive)
+  (set-process-sentinel 
+   (start-process "fetchmail" nil "fetchmail")
+   (lambda (process change)
+     (message (concat "fetchmail " change))
+     (sit-for 1))))
+
+;; A small lisp helper function to open mailto links using Gnus from a
+;; browser. Gnus is assumed to be already running.
+(defun anoop-mailto-handler (mail-address &optional subject)
+  "Compose new mail, using MAIL-ADDRESS and SUBJECT given"
+  (gnus-group-mail)
+  (message-goto-to)
+  (insert mail-address)
+  (message-goto-subject)
+  (insert subject)
+  (message-goto-body))
+
+;; IRC Chat.
+(require 'erc)
+
+;; Exclude SVN directories from find.
+(setq grep-find-command 
+  "find . -type f '!' -wholename '*/.svn/*' '!' -wholename '*/.git/*' -print0 | xargs -0 -e grep -nH -e ")
+
+;;(load-library "p4") 
+;;(p4-set-p4-executable "/apollo/env/SDETools/bin/p4")
+;;(setq p4-file-refresh-timer-time 7200)
+;;(setq p4-file-refresh-timer-period 7200) 
+
+;;
+;; Programming related stuff.
+;;
+(setq c-auto-newline 1) 
+(setq c-hungry-delete-key t)
+(add-hook 'c-mode-common-hook
+          (lambda ()
+            (define-key c-mode-map "\C-m" 'newline-and-indent)
+            (c-set-style "k&r")
+            (setq c-basic-offset 4)
+            (set-fill-column 120)
+            (global-set-key "{" 'insert-braces)))
+
+(defun linux-c-mode ()
+  "C mode with adjusted defaults for use with the Linux kernel."
+  (interactive)
+  (c-mode)
+  (c-set-style "k&r")
+  (setq c-basic-offset 8))
+
+(add-hook 'c++-mode-common-hook
+          (lambda ()
+	    (define-key c-mode-map "\C-m" 'newline-and-indent)
+            (c-set-style "k&r")
+            (setq c-basic-offset 4)
+	    (set-fill-column 120)))
+
+;(require 'jde)
+;; Customize jde behavior.
+(defun anoop-jde-mode-hook () 
+  ;; Auto-indent on <enter>
+  (local-set-key [(control m)] 'newline-and-indent)
+  (local-set-key "\C-m" 'newline-and-indent)
+  (message "JDE customizations loaded"))
+(add-hook 'jde-mode-hook 'anoop-jde-mode-hook)
+
+;; Perl
+;; cperl-mode is preferred to perl-mode                                        
+;(defalias 'perl-mode 'cperl-mode)
+
+;; PHP Stuff
+(require 'php-mode)
+(setq auto-mode-alist (cons '("\\.php$" . php-mode) auto-mode-alist))
+
+(require 'smarty-mode)
+(setq auto-mode-alist (cons '("\\.tpl$" . html-mode) auto-mode-alist))
+
+(setq load-path (cons (expand-file-name "~/elisp/emacs-scala-mode") load-path))
+(require 'scala-mode)
+(setq auto-mode-alist (cons '("\\.scala" . scala-mode) auto-mode-alist))
+
+(require 'clojure-mode)
+
+;; XML
+(load "~/elisp/nxml-mode-20041004/rng-auto.el")
+
+(setq auto-mode-alist
+      (cons '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\)\\'" . nxml-mode)
+            auto-mode-alist))
+
+(autoload 'rnc-mode "rnc-mode")
+(setq auto-mode-alist       
+      (cons '("\\.rnc\\'" . rnc-mode) auto-mode-alist))
+
+(setq nxml-child-indent 4) 
+
+;(autoload 'js2-mode "js2" nil t)
+;(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
+
+(require 'actionscript-mode)
+
+;; CSS
+(require 'css-mode)
+(setq auto-mode-alist (cons '("\\.css$" . css-mode) auto-mode-alist))
+
+;; Hadoop
+(load-file "~/elisp/piglatin-mode/piglatin.el")
+
+
+(add-to-list 'load-path "~/elisp/git")
+(require 'git)
+(require 'git-blame)
+
+(defun anoop-compile ()
+  "runs make"
+  (interactive)
+  (compile "make"))
+
+(defun anoop-compile-install ()
+  "runs 'make install'"
+  (interactive)
+  (compile "make install"))
+
+(defun anoop-compile-install-lib ()
+  "runs 'make install_libLTLIBRARIES'"
+  (interactive)
+  (compile "make install_libLTLIBRARIES"))
+
+(defun anoop-compile-clean ()
+  "runs 'make clean'"
+  (interactive)
+  (compile "make clean"))
+
+(defun touch-buffer ()
+  "Touch, to be saved, and force recompile."
+  (interactive)
+  (set-buffer-modified-p t))
+(global-set-key [(control c) ?t] 'touch-buffer)
+
+
+;;}}}
+;;{{{ insert-braces
+
+(defun insert-braces ()
+  "Insert matched braces, leave point inside."
+  (interactive "*")
+  (let (blink-paren-function) ;nil it temporarily
+    (execute-kbd-macro
+     (if (and (eq major-mode 'cc-c++-mode) (not (looking-at ";")))
+         "{};" "{}")))
+  (backward-sexp 1)
+  (if (save-excursion
+        (forward-char -1)
+        (looking-at "\\$"))
+      nil
+    (reindent-then-newline-and-indent)
+    (c-indent-exp)
+    (forward-char 1)
+    (newline-and-indent)))
+
+;;}}}
+
+;;}}}
+(setq js-indent-level 2)
+
+;; Matching parenthesis using % as in Vi.
+(defun match-paren (arg) 
+  "Go to the matching parenthesis if on parenthesis otherwise insert %." 
+  (interactive "p") 
+  (cond ((looking-at "\\s\(") (forward-list 1) (backward-char 1)) 
+        ((looking-at "\\s\)") (forward-char 1) (backward-list 1)) 
+        (t (self-insert-command (or arg 1)))))
+(global-set-key "%" 'match-paren)
+
+;;
+;; Text related stuff.
+;;
+
+;; Turn on Auto Fill mode automatically in Text mode and related modes.
+(add-hook 'text-mode-hook
+  '(lambda () (auto-fill-mode 1)))
+
+;; Wiki stuff
+
+; Emacs major mode for editing mediawiki articles.
+(autoload 'wikipedia-mode "wikipedia-mode.el"
+  "Major mode for editing documents in Wikipedia markup." t)
+
+(add-to-list 'auto-mode-alist
+   '("\\.wiki\\'" . wikipedia-mode))
+(add-to-list 'auto-mode-alist
+             '("en\\.wikipedia\\.org" . wikipedia-mode))
+
+(autoload 'longlines-mode "longlines.el"
+  "Minor mode for editing long lines." t)
+
+; Twiki support
+(require 'erin)
+(add-to-list 'auto-mode-alist
+             '("twiki.*\\'" . erin-mode))
+
+;; Turn on Flyspell mode automatically in Text mode and related modes.
+;(add-hook 'text-mode-hook
+;  '(lambda () (flyspell-mode)))
+
+(defun dos-unix ()
+  (interactive)
+  (goto-char (point-min))
+  (while (search-forward "\r" nil t) (replace-match "")))
+
+(defun unix-dos ()
+  (interactive)
+  (goto-char (point-min))
+  (while (search-forward "\n" nil t) (replace-match "\r\n")))
+
+
+;;
+;; Non-X options 
+;;
+
+;; Turn off menu bar for GNU Emacs under console.
+;; (unless (featurep 'xemacs)
+;;   (if (equal window-system nil)
+;;       (menu-bar-mode nil)))
+
+;;
+;; X-Specific options
+;;
+
+;;
+;; Dired
+;;
+
+;(defun my-dired-init ()
+;  "Bunch of stuff to run for dired, either immediately or when it's
+;         loaded."
+;  (define-key dired-mode-map [return] 'joc-dired-single-buffer)
+;  (define-key dired-mode-map [mouse-1] 'joc-dired-single-buffer-mouse)
+;  (define-key dired-mode-map "^"
+;    (function
+;     (lambda nil (interactive) (joc-dired-single-buffer "..")))))
+
+;; If dired's already loaded, then the keymap will be bound.
+;(if (boundp 'dired-mode-map)
+;    ;; We're good to go; just add our bindings
+;    (my-dired-init)
+;  ;; It's not loaded yet, so add our bindings to the load-hook.
+;  (add-hook 'dired-load-hook 'my-dired-init))
+
+
+;;  To use the magic-buffer function, you first need to start dired in a
+;;  buffer whose name is the value of joc-dired-magic-buffer-name.  Once
+;;  the buffer has this name, it will keep it unless explicitly renamed.
+;;  Use the function joc-dired-magic-buffer to start this initial dired
+;;  magic buffer (or you can simply rename an existing dired buffer to the
+;;  magic name).  This function is bound globally, so that I can always get
+;;  back to my magic buffer from anywhere.  Likewise, I bind another key to
+;;  bring the magic buffer up in the current default-directory, allowing me
+;;  to move around fairly easily.
+;(global-set-key [(f3)] 'joc-dired-magic-buffer)
+;(global-set-key [(control f3)] (function
+;				(lambda nil (interactive)
+;				  (joc-dired-magic-buffer default-directory))))
+;(global-set-key [(shift f3)] (function
+;			      (lambda nil (interactive)
+;				(message "Current directory is: %s" default-directory))))
+;(global-set-key [(meta f3)] 'joc-dired-toggle-buffer-name)
+
+
+;;
+;; W3 related stuff
+;;
+
+;;
+;; BBDB
+;;
+
+;; Fire up the BBDB
+
+; XEmacs BBDB screws up. Don't know why. So disable
+; it for a while.
+;(unless (featurep 'xemacs)
+;  (require 'bbdb) 
+;  (bbdb-initialize) 
+;  (add-hook 'gnus-startup-hook 'bbdb-insinuate-gnus) 
+  ;; Add a  binding for M-TAB to Message mode
+;  (add-hook 'gnus-startup-hook 'bbdb-insinuate-message)
+;  (add-hook 'message-setup-hook 'bbdb-define-all-aliases))
+
+(setq bbdb-file "~/Mail/.bbdb")
+(setq bbdb-auto-notes-alist '(
+   ("Organization" (".*" company 0))
+   ("X-Now-Reading" (".+" books 0))
+   ("X-Now-Playing" (".+" music 0))
+   ("Newsgroups" (".+" posted-to 0))
+   ("Xref" ("[^ ]* \\([^:]+\\):.+" posted-to 1))
+   ("User-Agent" (".+" newsreader 0 t))
+   ("X-Newsreader" (".+" newsreader 0 t))
+   ("X-Mailer" (".+" newsreader 0 t))
+))
+
+(setq bbdb-use-alternate-names t)
+(setq bbdb-quiet-about-name-mismatches t)
+(setq bbdb/gnus-summary-prefer-real-names 'bbdb)
+(setq bbdb/gnus-summary-mark-known-posters nil)
+(setq bbdb-send-mail-style 'message)
+(setq bbdb-electric-p nil)
+
+(setq bbdb-offer-save (quote savenoprompt))
+(setq bbdb-auto-revert-p t)
+(setq bbdb-use-pop-up nil)
+;; Desired number of lines in a BBDB window
+(setq bbdb-pop-up-target-lines 6)
+(setq bbdb-notice-hook (quote (bbdb-auto-notes-hook)))
+(setq bbdb-send-mail-style (quote message))
+
+(setq gnus-select-group-hook
+      '(lambda ()
+	 (setq bbdb/news-auto-create-p
+	       (or (string= "mbox" gnus-newsgroup-name)
+		   (string= "career" gnus-newsgroup-name)
+		   (string= "tkmr98" gnus-newsgroup-name)
+		   (string= "lip" gnus-newsgroup-name)
+		   (string= "lih" gnus-newsgroup-name)))))
+
+(message "BBDB initialised")
+
+(add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+(define-key global-map "\C-cl" 'org-store-link)
+(define-key global-map "\C-ca" 'org-agenda)
+(setq org-log-done t)
+
+;; (defvar pgg-gpg-user-id "YOUR-ID-HERE")
+;; (autoload 'pgg-make-temp-file "pgg" "PGG")
+;; (autoload 'pgg-gpg-decrypt-region "pgg-gpg" "PGG GnuPG")
+;; (define-generic-mode 'gpg-file-mode
+;;   (list ?#) 
+;;   nil nil
+;;   '(".gpg\\'" ".gpg-encrypted\\'")
+;;   (list (lambda ()
+;; 	    (add-hook 'before-save-hook
+;;                       (lambda () 
+;;                         (let ((pgg-output-buffer (current-buffer)))
+;;                           (pgg-gpg-encrypt-region (point-min) (point-max)
+;;                                                   (list pgg-gpg-user-id))))
+;;                       nil t)
+;; 	    (add-hook 'after-save-hook 
+;; 		      (lambda ()
+;;                         (let ((pgg-output-buffer (current-buffer)))
+;;                           (pgg-gpg-decrypt-region (point-min) (point-max)))
+;; 			(set-buffer-modified-p nil)
+;; 			(auto-save-mode nil))
+;; 		      nil t)
+;;             (let ((pgg-output-buffer (current-buffer)))
+;;               (pgg-gpg-decrypt-region (point-min) (point-max)))
+;; 	    (auto-save-mode nil)
+;; 	    (set-buffer-modified-p nil)))
+;;   "Mode for gpg encrypted files")
+
+;;
+;; Misc functions
+;;
+
+;; Disable the query when killing a buffer.
+(defun anoop-kill-buffer ()
+  "Kill buffer without confirmation."
+  (interactive)
+  (kill-buffer nil))
+
+(defun anoop-print-date ()
+  "Insert date string into current buffer."
+  (interactive)
+  (insert (current-time-string)))
+
+;; Get rid of that annoying prompt that requires one to type
+;; in YES and then press the enter key to confirm.
+(defun yes-or-no-p (PROMPT)
+  (beep)
+  (y-or-n-p PROMPT))
+
+;; Print the ASCII table.
+(defun ascii-table ()
+  "Print the ascii table."
+  (interactive)
+  (switch-to-buffer "*ASCII*")
+  (erase-buffer)
+  (insert (format "ASCII characters up to number %d.\n" 254))
+  (let ((i 0))
+    (while (< i 254)
+      (setq i (+ i 1))
+      (insert (format "%4d %c\n" i i))))
+  (beginning-of-buffer))
+
+(custom-set-variables
+ '(load-home-init-file t t))
+(custom-set-faces)
+
+(set-face-attribute 'default nil :family "Inconsolata" :height 110) 
+(setq epg-debug t)
+
+
+(defun set-exec-path-from-shell-PATH ()
+  "Set up Emacs' `exec-path' and PATH environment variable to match that used by the user's shell.
+
+This is particularly useful under Mac OSX, where GUI apps are not started from a shell."
+  (interactive)
+  (let ((path-from-shell (replace-regexp-in-string "[ \t\n]*$" "" (shell-command-to-string "$SHELL --login -i -c 'echo $PATH'"))))
+    (setenv "PATH" path-from-shell)
+    (setq exec-path (split-string path-from-shell path-separator))))
+
+(setq exec-path (append exec-path '("/usr/local/bin")))
+
+(autoload 'markdown-mode "markdown-mode"
+   "Major mode for editing Markdown files" t)
+(add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
+(add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
+
+(autoload 'gfm-mode "markdown-mode"
+   "Major mode for editing GitHub Flavored Markdown files" t)
+(add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
+
+(require 'package)
+(let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
+                    (not (gnutls-available-p))))
+       (proto (if no-ssl "http" "https")))
+  (when no-ssl
+    (warn "\
+Your version of Emacs does not support SSL connections,
+which is unsafe because it allows man-in-the-middle attacks.
+There are two things you can do about this warning:
+1. Install an Emacs version that does support SSL and be safe.
+2. Remove this warning from your init file so you won't see it again."))
+  ;; Comment/uncomment these two lines to enable/disable MELPA and MELPA Stable as desired
+  ;;(add-to-list 'package-archives (cons "melpa" (concat proto "://melpa.org/packages/")) t)
+  (add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
+  (when (< emacs-major-version 24)
+    ;; For important compatibility libraries like cl-lib
+    (add-to-list 'package-archives (cons "gnu" (concat proto "://elpa.gnu.org/packages/")))))
+(package-initialize)
+;;(package-install 'use-package)
+(require 'use-package)
+
+(use-package ensime
+  :ensure t
+  :pin melpa-stable)
+
+;; Adding shortcuts to java-mode, writing the shortcut folowed by a
+;; non-word character will cause an expansion.
+(defun java-shortcuts ()
+  (define-abbrev-table 'java-mode-abbrev-table
+    '(("psvm" "public static void main(String[] args) {
+}" nil 0)
+      ("sopl" "System.out.println()" nil 0)
+      ("sopf" "System.out.printf()" nil 0)
+      ("println" "System.out.println()" nil 0)
+      ("printf" "System.out.printf()" nil 0)
+      ("classsol"
+       "import java.util.*;
+
+/**
+ *
+ * @see 
+ */
+class Solution {
+    public static void main(String[] args) {
+        Solution s = new Solution();
+        System.out.println(s.);
+    }
+}" nil 0)      
+)))
+
+(add-hook 'java-mode-hook 'java-shortcuts)
+
+      
+;;
+;; Colors and themes.
+;;
+;(require 'color-theme)
+;(color-theme-initialize)
+;(color-theme-calm-forest)
+;(color-theme-dark-blue)
+(load-theme 'dracula t)
+;; Set default font
+(set-face-attribute 'default nil
+                    :family "Monaco"
+                    :height 120
+                    :weight 'normal
+                    :width 'normal)

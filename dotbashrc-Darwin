@@ -1,0 +1,10 @@
+if [ $TERM != 'dumb' ] 
+then
+    alias ls='ls -G'
+fi
+
+if ([ $TERM = 'xterm' ] || [ $TERM = 'dumb' ] )
+then
+    export EDITOR=emacsclient
+    alias ls='/bin/ls'
+fi
